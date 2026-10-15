@@ -1,0 +1,5 @@
+FROM napcat-cherynyxus-base:pinned
+RUN mkdir -p /app/napcat && unzip -qo /app/NapCat.Shell.zip -d /app/napcat
+COPY packages/napcat-shell/dist/napcat.mjs /app/napcat/napcat.mjs
+COPY packages/napcat-shell/dist/worker/ /app/napcat/worker/
+COPY packages/napcat-shell/dist/*.js /app/napcat/

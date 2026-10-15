@@ -12,6 +12,7 @@ const require = createRequire(import.meta.url);
 
 /** 允许加载的官方插件 ID 白名单。不在表内的插件一律拒绝加载。 */
 const OFFICIAL_PLUGIN_IDS = new Set<string>([
+  'napcat-plugin-cherynyxus',
   'napcat-plugin-builtin',
   'napcat-plugin-cleaner',
   'napcat-plugin-ssqq',
