@@ -20,6 +20,28 @@ type ActionNameType = typeof ActionName[keyof typeof ActionName];
 const router: Router = Router();
 const DEFAULT_ADAPTER_NAME = 'debug-primary';
 
+// Isolated test image only: one target, two reads, no retries or sends.
+let regionProbeUsed = false;
+router.post('/region-probe-once', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  if (regionProbeUsed) return res.status(409).json({ error: 'single-use exhausted' });
+  const userId = String(req.body?.user_id ?? '');
+  if (!/^\d{5,12}$/.test(userId)) return res.status(400).json({ error: 'numeric user_id required' });
+  const ob = WebUiDataRuntime.getOneBotContext();
+  if (!ob) return res.status(503).json({ error: 'Login required' });
+  regionProbeUsed = true;
+  const fields = (p: any) => Object.fromEntries(['country', 'province', 'city', 'homeTown'].map(k => [k, p?.[k] ?? null]));
+  try {
+    const api = ob.core.apis.UserApi;
+    const a = await api.getUserDetailInfoByUin(userId);
+    if (!a.detail?.uid) return res.status(502).json({ error: 'No UID returned; second query skipped' });
+    const b = await api.fetchUserDetailInfo(a.detail.uid, 1);
+    return res.json({ byUin: fields(a.detail.commonExt), byUidServer: fields(b.commonExt), queries: 2 });
+  } catch {
+    return res.status(502).json({ error: 'Query failed; no retry' });
+  }
+});
+
 /**
  * 获取所有 Action 的 Schema 信息
  */
